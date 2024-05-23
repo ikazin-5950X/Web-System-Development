@@ -1,0 +1,27 @@
+@charset "utf-8";
+
+html {
+    font-size: 90%;
+}
+
+header {
+    display: flex;
+    justify-content: center;
+}
+
+div {
+    width: 400px;
+    margin: auto;
+}
+
+.cls-1 {
+    fill: #032559;
+}
+
+.cls-1, .cls-2 {
+    stroke-width: 0px;
+}
+
+.cls-2 {
+    fill: #1890ff;
+}
