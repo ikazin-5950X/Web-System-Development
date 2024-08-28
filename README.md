@@ -9,8 +9,8 @@ docker compose up  　　
 Error response from daemon: Conflict. The container name “/php” is already in use by container “**************244124ceaac17f4c115f2b6facd5e67d22763d80********“. You have to remove (or rename) that container to be able to reuse that name.  
 ```
 ↑なエラーが出たら、
-```
-bashdocker rm **************244124ceaac17f4c115f2b6facd5e67d22763d80********
+```bash
+docker rm **************244124ceaac17f4c115f2b6facd5e67d22763d80********
 ```  
 で既存コンテナ削除  
 とりあえずエラーが出なくなるまで実行。  　　
