@@ -1,2 +1,2 @@
-docker compose upで起動するだけ
+docker compose upで起動するだけ  
 データ残ってるけどまぁいいよね！(よくない)
