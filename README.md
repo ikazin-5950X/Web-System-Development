@@ -34,7 +34,7 @@ CREATE TABLE `bbs_entries` (
 ```mysql
 ALTER TABLE `bbs_entries` ADD COLUMN image_filename TEXT DEFAULT NULL;
 ```
-3枚目のscreenでwebのターミナルを起動
+3枚目のscreenで内部のターミナルを起動
 ```bash
 docker compose exec web bash  
 ```
