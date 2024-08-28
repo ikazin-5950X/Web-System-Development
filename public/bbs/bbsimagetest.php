@@ -1,5 +1,5 @@
 <?php
-$dbh = new PDO('mysql:host=mysql; dbname=techc','root','');
+$dbh = new PDO('mysql:host=mysql; dbname=techc', 'root', '');
 
 if (isset($_POST['body'])) {
     $image_filename = null;
@@ -16,7 +16,7 @@ if (isset($_POST['body'])) {
     }
     $insert_sth = $dbh -> prepare("INSERT INTO bbs_entries (body, image_filename) VALUES (:body, :image_filename)");
     $insert_sth -> execute([
-        'body' => $_POST['body'],
+        ':body' => $_POST['body'],
         ':image_filename' => $image_filename,
     ]);
     header("HTTP/1.1 302 Found");
@@ -34,27 +34,12 @@ $select_sth -> execute();
 <head>
     <meta charset="UTF-8">
     <title>掲示板</title>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const fileInput = document.getElementById('imageinput');
-
-            fileInput.addEventListener('change', function(event) {
-                const file = event.target.files[0];
-                const maxSize = 5 * 1024 * 1024; // 5MB
-
-                if (file.size > maxSize) {
-                    alert('ファイルサイズは5MB以下にしてください。');
-                    fileInput.value = ''; // Clear the file input
-                }
-            });
-        });
-    </script>
 </head>
 <body>
     <form method="POST" action="./bbsimagetest.php" enctype="multipart/form-data">
         <textarea name="body"></textarea>
         <div style="margin: 1em 0;">
-            <input type="file" accept="image/*" name="image" id="imageinput">
+            <input type="file" accept="image/*" name="image" id="imageInput">
         </div>
         <button type="submit">送信</button>
     </form>
@@ -80,5 +65,21 @@ $select_sth -> execute();
     </dl>
 
     <?php endforeach ?>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageInput = document.getElementById('imageInput');
+
+            imageInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                const maxSize = 5 * 1024 * 1024; // 5MB
+
+                if (file.size > maxSize) {
+                    alert('ファイルサイズは5MB以下にしてください。');
+                    imageInput.value = ''; // Clear the file input
+                }
+            });
+        });
+    </script>
 </body>
 </html>
