@@ -31,6 +31,9 @@ CREATE TABLE `bbs_entries` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
+```mysql
+ALTER TABLE `bbs_entries` ADD COLUMN image_filename TEXT DEFAULT NULL;
+```
 3枚目のscreenでwebのターミナルを起動
 ```bash
 docker compose exec web bash  
