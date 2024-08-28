@@ -1,3 +1,3 @@
-この構成ファイルをそのまま使うのであれば  
-docker compose up  
-で起動するだけ。
+memo:  
+docker compose exec web bash  
+chmod 777 /var/www/upload/image/
