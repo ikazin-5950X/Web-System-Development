@@ -32,37 +32,133 @@ $select_sth->execute();
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <title>掲示板</title>
     <style>
+        body {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+        form {
+            margin-bottom: 1em;
+            padding-bottom: 1em;
+            border-bottom: 1px solid #000;
+            padding: 0 1em;
+        }
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 0.5em;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        .filer {
+            margin: 1em 0;
+        }
+        button {
+            padding: 0.5em;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        dl {
+            margin-bottom: 1em;
+            padding-bottom: 1em;
+            border-bottom: 1px solid #ccc;
+            padding: 0 1em;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
         .anchor-preview {
-            display: none; /* デフォルトで非表示 */
+            display: none;
             position: absolute;
             background-color: #f0f0f0;
             border: 1px solid #ccc;
             padding: 10px;
-            max-width: 300px; /* 最大幅を設定 */
-            max-height: 200px; /* 最大高さを設定 */
-            overflow: auto; /* 内容が溢れる場合にスクロールバーを表示 */
+            max-width: 300px;
+            max-height: 200px;
+            overflow: auto;
             z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* プレビューの影を追加 */
-            border-radius: 4px; /* 角を丸くする */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 4px; 
         }
         .reply-anchor {
             color: blue;
             text-decoration: underline;
+            cursor: pointer;
+        }
+        #image-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        #image-modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+        }
+        #image-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        #image-modal-close:hover,
+        #image-modal-close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        @media (max-width: 600px) {
+            body {
+                font-size: 14px;
+            }
+            form {
+                padding: 0 0.5em;
+            }
+            dl {
+                padding: 0 0.5em;
+            }
+            .anchor-preview {
+                max-width: 100%;
+                max-height: 150px;
+                padding: 5px;
+            }
         }
     </style>
 </head>
 <body>
     <form method="POST" action="./1978_SnowChicago.php" enctype="multipart/form-data">
         <textarea name="body" id="body"></textarea>
-        <div style="margin: 1em 0;">
+        <div class="filer" style="margin: 1em 0;">
             <input type="file" accept="image/*" name="image" id="imageInput">
         </div>
         <button type="submit">送信</button>
     </form>
-
-    <hr>
 
     <?php foreach ($select_sth as $entry): ?>
     <dl style="margin-bottom: 1em; padding-bottom: 1em; border-bottom: 1px solid #ccc;">
@@ -85,7 +181,31 @@ $select_sth->execute();
 
     <div id="anchor-preview" class="anchor-preview"></div>
 
+    <div id="image-modal">
+        <span id="image-modal-close">&times;</span>
+        <img id="image-modal-content">
+    </div>
+
     <script>
+        $(document).ready(function() {
+            // 画像クリック時のイベント処理
+            $('img').on('click', function() {
+                $('#image-modal-content').attr('src', $(this).attr('src'));
+                $('#image-modal').fadeIn();
+            });
+
+            // モーダルを閉じる
+            $('#image-modal-close').on('click', function() {
+                $('#image-modal').fadeOut();
+            });
+
+            // モーダルをクリックしたときに閉じる（画像以外の部分）
+            $('#image-modal').on('click', function(e) {
+                if (e.target.id === 'image-modal') {
+                    $('#image-modal').fadeOut();
+                }
+            });
+        });
         document.addEventListener('DOMContentLoaded', function() {
             const imageInput = document.getElementById('imageInput');
             const maxSize = 5 * 1024 * 1024; // 5MB
@@ -168,15 +288,24 @@ $select_sth->execute();
 
                         // プレビューの位置を調整する
                         const previewRect = preview.getBoundingClientRect();
-                        let left = event.pageX + 10;
-                        let top = event.pageY + 10;
+                        const anchorRect = event.target.getBoundingClientRect();
+                        const viewportHeight = window.innerHeight;
+                        let left = anchorRect.left + window.pageXOffset + 10;
+                        // let top = event.pageY + 10;
+                        let top;
 
-                        // プレビューが画面外に出ないように調整
+                        // プレビューを画面下部に表示するか上部に表示するかを判断
+                        if (anchorRect.bottom + previewRect.height > viewportHeight) {
+                            // プレビューが下に収まらない場合、上に表示
+                            top = anchorRect.top + window.pageYOffset - previewRect.height - 10;
+                        } else {
+                            // 下に余裕がある場合、下に表示
+                            top = anchorRect.bottom + window.pageYOffset + 10;
+                        }
+
+                        // プレビューが画面右端を超える場合、位置を調整
                         if (left + previewRect.width > window.innerWidth) {
                             left = window.innerWidth - previewRect.width - 10;
-                        }
-                        if (top + previewRect.height > window.innerHeight) {
-                            top = window.innerHeight - previewRect.height - 10;
                         }
 
                         preview.style.left = left + 'px';
