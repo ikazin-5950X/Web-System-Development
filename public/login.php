@@ -2,7 +2,7 @@
 // DBに接続
 $dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
 if (!empty($_POST['email']) && !empty($_POST['password'])) {
-  // mail と password が送られてきた場合のみログイン処理をする
+  // POSTで email と password が送られてきた場合のみログイン処理をする
   // email から会員情報を引く
   $select_sth = $dbh->prepare("SELECT * FROM users WHERE email = :email ORDER BY id DESC LIMIT 1");
   $select_sth->execute([
@@ -16,16 +16,19 @@ if (!empty($_POST['email']) && !empty($_POST['password'])) {
     return;
   }
 
-  // パスワードが正しいかチェック
   $correct_password = password_verify($_POST['password'], $user['password']);
+
   if (!$correct_password) {
     // パスワードが間違っていれば、処理を中断しエラー用クエリパラメータ付きのログイン画面URLにリダイレクト
     header("HTTP/1.1 302 Found");
     header("Location: ./login.php?error=1");
     return;
   }
+
+  session_start();
   // セッションにログインできた会員情報の主キー(id)を設定
   $_SESSION["login_user_id"] = $user['id'];
+
   // ログインが成功したらログイン完了画面にリダイレクト
   header("HTTP/1.1 302 Found");
   header("Location: ./login_finish.php");

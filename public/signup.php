@@ -16,21 +16,13 @@ if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password
     header("Location: ./signup.php?duplicate_email=1");
     return;
   }
-  // salt決め
-  $salt = bin2hex(random_bytes(32));
 
-  // ストレッチング処理
-  $stretched_hash = $_POST['password'] . $salt;
-  for ($i = 0; $i < 100; $i++) {
-    $stretched_hash = hash('sha256', $stretched_hash);
-  }
-  
   // insertする
   $insert_sth = $dbh->prepare("INSERT INTO users (name, email, password) VALUES (:name, :email, :password)");
   $insert_sth->execute([
     ':name' => $_POST['name'],
     ':email' => $_POST['email'],
-    ':password' => $stretched_hash . $salt,
+    ':password' => password_hash($_POST['password'], PASSWORD_DEFAULT),
   ]);
   // 処理が終わったら完了画面にリダイレクト
   header("HTTP/1.1 302 Found");

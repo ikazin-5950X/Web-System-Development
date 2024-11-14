@@ -1,5 +1,6 @@
 <?php
 session_start();
+
 // セッションにログインIDが無ければ (=ログインされていない状態であれば) ログイン画面にリダイレクトさせる
 if (empty($_SESSION['login_user_id'])) {
   header("HTTP/1.1 302 Found");
@@ -11,7 +12,7 @@ $dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
 // セッションにあるログインIDから、ログインしている対象の会員情報を引く
 $insert_sth = $dbh->prepare("SELECT * FROM users WHERE id = :id");
 $insert_sth->execute([
-    ':id' => $_SESSION['login_user_id'],
+  ':id' => $_SESSION['login_user_id'],
 ]);
 $user = $insert_sth->fetch();
 ?>
