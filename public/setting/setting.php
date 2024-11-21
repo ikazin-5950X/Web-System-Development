@@ -59,5 +59,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <button type="submit">アップロード</button>
 </form>
 <script>
-// 画像アップロード用のJavaScriptは前述のコードと同様
+document.addEventListener("DOMContentLoaded", () => {
+  const imageInput = document.getElementById("imageInput");
+  imageInput.addEventListener("change", () => {
+    if (imageInput.files.length < 1) {
+      // 未選択の場合
+      return;
+    }
+    const file = imageInput.files[0];
+    if (!file.type.startsWith('image/')){ // 画像でなければスキップ
+      return;
+    }
+    // 画像縮小処理
+    const imageBase64Input = document.getElementById("imageBase64Input"); // base64を送るようのinput
+    const canvas = document.getElementById("imageCanvas"); // 描画するcanvas
+    const reader = new FileReader();
+    const image = new Image();
+    reader.onload = () => { // ファイルの読み込み完了したら動く処理を指定
+      image.onload = () => { // 画像として読み込み完了したら動く処理を指定
+        // 元の縦横比を保ったまま縮小するサイズを決めてcanvasの縦横に指定する
+        const originalWidth = image.naturalWidth; // 元画像の横幅
+        const originalHeight = image.naturalHeight; // 元画像の高さ
+        const maxLength = 1000; // 横幅も高さも1000以下に縮小するものとする
+        if (originalWidth <= maxLength && originalHeight <= maxLength) { // どちらもmaxLength以下の場合そのまま
+            canvas.width = originalWidth;
+            canvas.height = originalHeight;
+        } else if (originalWidth > originalHeight) { // 横長画像の場合
+            canvas.width = maxLength;
+            canvas.height = maxLength * originalHeight / originalWidth;
+        } else { // 縦長画像の場合
+            canvas.width = maxLength * originalWidth / originalHeight;
+            canvas.height = maxLength;
+        }
+        // canvasに実際に画像を描画 (canvasはdisplay:noneで隠れているためわかりにくいが...)
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        // canvasの内容をbase64に変換しinputのvalueに設定
+        imageBase64Input.value = canvas.toDataURL();
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+});
 </script>
