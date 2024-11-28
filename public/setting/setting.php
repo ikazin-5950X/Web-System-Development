@@ -5,6 +5,7 @@ if (empty($_SESSION['login_user_id'])) {
   header("Location: /login.php");
   return;
 }
+
 // DBに接続
 $dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
 // セッションにあるログインIDから、ログインしている会員情報を取得
@@ -15,91 +16,136 @@ $select_sth->execute([
 $user = $select_sth->fetch();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $image_filename = $user['icon_filename'];
-  if (!empty($_POST['image_base64'])) {
-    $base64 = preg_replace('/^data:.+base64,/', '', $_POST['image_base64']);
+  $icon_filename = $user['icon_filename'];
+  $cover_filename = $user['cover_filename'];
+
+  // アイコン画像の処理
+  if (!empty($_POST['icon_image_base64'])) {
+    $base64 = preg_replace('/^data:.+base64,/', '', $_POST['icon_image_base64']);
     $image_binary = base64_decode($base64);
-    $image_filename = strval(time()) . bin2hex(random_bytes(25)) . '.png';
-    $filepath = '/var/www/upload/image/' . $image_filename;
+    $icon_filename = strval(time()) . bin2hex(random_bytes(25)) . '.png';
+    $filepath = '/var/www/upload/image/' . $icon_filename;
     file_put_contents($filepath, $image_binary);
   }
-  
+
+  // カバー画像の処理
+  if (!empty($_POST['cover_image_base64'])) {
+    $base64 = preg_replace('/^data:.+base64,/', '', $_POST['cover_image_base64']);
+    $image_binary = base64_decode($base64);
+    $cover_filename = strval(time()) . bin2hex(random_bytes(25)) . '_cover.png';
+    $filepath = '/var/www/upload/image/' . $cover_filename;
+    file_put_contents($filepath, $image_binary);
+  }
+
   // 自己紹介文を保存
   $self_intro = mb_substr($_POST['self_intro'], 0, 1000); // 1000文字以内に制限
-  $update_sth = $dbh->prepare("UPDATE users SET icon_filename = :icon_filename, self_intro = :self_intro WHERE id = :id");
+  $birthday = !empty($_POST['birthday']) ? $_POST['birthday'] : null;
+  $update_sth = $dbh->prepare("UPDATE users SET icon_filename = :icon_filename, cover_filename = :cover_filename, self_intro = :self_intro, cover_filename = :cover_filename, birthday = :birthday WHERE id = :id");
   $update_sth->execute([
       ':id' => $user['id'],
-      ':icon_filename' => $image_filename,
+      ':icon_filename' => $icon_filename,
+      ':cover_filename' => $cover_filename,
       ':self_intro' => $self_intro,
+      ':cover_filename' => $cover_filename,
+      ':birthday' => $birthday,
   ]);
-  
+
   header("HTTP/1.1 302 Found");
   header("Location: ./setting.php");
   return;
 }
 ?>
-<h1>アイコン画像設定/変更</h1>
-<div>
-  <?php if(empty($user['icon_filename'])): ?>
-    現在未設定
-  <?php else: ?>
-    <img src="/image/<?= $user['icon_filename'] ?>" style="height: 5em; width: 5em; border-radius: 50%; object-fit: cover;">
-  <?php endif; ?>
-</div>
+
+<a href="/bbs.php">掲示板に戻る</a>
+<h1>アイコン画像およびカバー画像設定/変更</h1>
+<dl>
+  <dt>ID</dt>
+  <dd><?= htmlspecialchars($user['id']) ?></dd>
+  <dt>名前</dt>
+  <dd><?= htmlspecialchars($user['name']) ?></dd>
+  <dt>生年月日</dt>
+  <dd>
+    <?= htmlspecialchars($user['birthday'] ?? '未設定') ?>
+  </dd>
+  <dt>アイコン</dt>
+  <dd>
+    <?php if(empty($user['icon_filename'])): ?>
+      現在未設定
+    <?php else: ?>
+      <img src="/image/<?= $user['icon_filename'] ?>" style="height: 5em; width: 5em; border-radius: 50%; object-fit: cover;">
+    <?php endif; ?>
+  </dd>
+  <dt>カバー画像</dt>
+  <dd>
+    <?php if(empty($user['cover_filename'])): ?>
+      現在未設定
+    <?php else: ?>
+      <img src="/image/<?= $user['cover_filename'] ?>" style="height: 10em; width: 100%; object-fit: cover;">
+    <?php endif; ?>
+  </dd>
+</dl>
+
 <form method="POST">
-  <div style="margin: 1em 0;">
-    <input type="file" accept="image/*" name="image" id="imageInput">
+  <div>
+    <label>アイコン画像:</label>
+    <input type="file" accept="image/*" id="iconImageInput">
+    <input id="iconImageBase64Input" type="hidden" name="icon_image_base64">
   </div>
-  <div style="margin: 1em 0;">
+  <div>
+    <label>カバー画像:</label>
+    <input type="file" accept="image/*" id="coverImageInput">
+    <input id="coverImageBase64Input" type="hidden" name="cover_image_base64">
+  </div>
+  <div>
     <label>自己紹介 (最大1000文字):</label>
     <textarea name="self_intro" rows="5" maxlength="1000"><?= htmlspecialchars($user['self_intro'] ?? '') ?></textarea>
   </div>
-  <input id="imageBase64Input" type="hidden" name="image_base64">
-  <canvas id="imageCanvas" style="display: none;"></canvas>
+  <div>
+    <label>生年月日:</label>
+    <input type="date" name="birthday" value="<?= htmlspecialchars($user['birthday'] ?? '') ?>">
+  </div>
   <button type="submit">アップロード</button>
 </form>
+
 <script>
+// 以下はアイコン画像とカバー画像の処理をするスクリプト
 document.addEventListener("DOMContentLoaded", () => {
-  const imageInput = document.getElementById("imageInput");
-  imageInput.addEventListener("change", () => {
-    if (imageInput.files.length < 1) {
-      // 未選択の場合
-      return;
-    }
-    const file = imageInput.files[0];
-    if (!file.type.startsWith('image/')){ // 画像でなければスキップ
-      return;
-    }
-    // 画像縮小処理
-    const imageBase64Input = document.getElementById("imageBase64Input"); // base64を送るようのinput
-    const canvas = document.getElementById("imageCanvas"); // 描画するcanvas
-    const reader = new FileReader();
-    const image = new Image();
-    reader.onload = () => { // ファイルの読み込み完了したら動く処理を指定
-      image.onload = () => { // 画像として読み込み完了したら動く処理を指定
-        // 元の縦横比を保ったまま縮小するサイズを決めてcanvasの縦横に指定する
-        const originalWidth = image.naturalWidth; // 元画像の横幅
-        const originalHeight = image.naturalHeight; // 元画像の高さ
-        const maxLength = 1000; // 横幅も高さも1000以下に縮小するものとする
-        if (originalWidth <= maxLength && originalHeight <= maxLength) { // どちらもmaxLength以下の場合そのまま
-            canvas.width = originalWidth;
-            canvas.height = originalHeight;
-        } else if (originalWidth > originalHeight) { // 横長画像の場合
+  function setupImageInput(inputId, base64InputId, canvasId) {
+    const imageInput = document.getElementById(inputId);
+    const base64Input = document.getElementById(base64InputId);
+    const canvas = document.createElement('canvas'); // canvasを動的に生成
+
+    imageInput.addEventListener("change", () => {
+      if (imageInput.files.length < 1) return;
+      const file = imageInput.files[0];
+      if (!file.type.startsWith('image/')) return;
+
+      const reader = new FileReader();
+      const image = new Image();
+
+      reader.onload = () => {
+        image.onload = () => {
+          const maxLength = 1000;
+          if (image.naturalWidth > image.naturalHeight) {
             canvas.width = maxLength;
-            canvas.height = maxLength * originalHeight / originalWidth;
-        } else { // 縦長画像の場合
-            canvas.width = maxLength * originalWidth / originalHeight;
+            canvas.height = (image.naturalHeight / image.naturalWidth) * maxLength;
+          } else {
             canvas.height = maxLength;
-        }
-        // canvasに実際に画像を描画 (canvasはdisplay:noneで隠れているためわかりにくいが...)
-        const context = canvas.getContext("2d");
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        // canvasの内容をbase64に変換しinputのvalueに設定
-        imageBase64Input.value = canvas.toDataURL();
+            canvas.width = (image.naturalWidth / image.naturalHeight) * maxLength;
+          }
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+          base64Input.value = canvas.toDataURL();
+        };
+        image.src = reader.result;
       };
-      image.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
+
+      reader.readAsDataURL(file);
+    });
+  }
+
+  setupImageInput("iconImageInput", "iconImageBase64Input");
+  setupImageInput("coverImageInput", "coverImageBase64Input");
 });
 </script>

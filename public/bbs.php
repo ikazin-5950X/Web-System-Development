@@ -49,7 +49,7 @@ function bodyFilter (string $body): string
 <?php if(empty($_SESSION['login_user_id'])): ?>
   投稿するには<a href="/login.php">ログイン</a>が必要です。
 <?php else: ?>
-  <!-- フォームのPOST先はこのファイル自身にする -->
+  現在ログイン中 (<a href="/setting/setting.php">設定画面はこちら</a>)
   <form method="POST" action="./bbs.php"><!-- enctypeは外しておきましょう -->
     <textarea name="body" required></textarea>
     <div style="margin: 1em 0;">
@@ -73,12 +73,14 @@ function bodyFilter (string $body): string
       投稿者
     </dt>
     <dd style="display: flex; align-items: center;">
+      <a href="/profile.php?user_id=<?= $entry['user_id'] ?>">
         <?php if (!empty($entry['icon_filename'])): ?>
           <img src="/image/<?= htmlspecialchars($entry['icon_filename']) ?>" 
                style="height: 2em; width: 2em; border-radius: 50%; object-fit: cover; margin-right: 0.5em;">
         <?php endif; ?>
         <?= htmlspecialchars($entry['user_name']) ?>
         (ID: <?= htmlspecialchars($entry['user_id']) ?>)
+      </a>
     </dd>
     <dt>日時</dt>
     <dd><?= $entry['created_at'] ?></dd>
