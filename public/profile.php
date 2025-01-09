@@ -64,7 +64,7 @@ if (!empty($_SESSION['login_user_id'])) {
 ?>
 
 <h1><?= htmlspecialchars($user['name']) ?> さん のプロフィール</h1>
-<a href="/bbs.php">掲示板に戻る</a>
+<a href="/timeline.php">タイムラインに戻る</a>
 
 <!-- カバー画像表示 -->
 <div>
@@ -85,7 +85,7 @@ if (!empty($_SESSION['login_user_id'])) {
 </div>
 
 <!-- フォローリンクまたはフォロー状態表示 -->
-<?php if ($_SESSION['login_user_id'] !== $user['id']): ?>
+<?php if (isset($_SESSION['login_user_id']) && $_SESSION['login_user_id'] !== $user['id']): ?>
   <?php if (empty($relationship)): ?>
     <div>
       <a href="./follow.php?followee_user_id=<?= htmlspecialchars($user['id']) ?>">フォローする</a>

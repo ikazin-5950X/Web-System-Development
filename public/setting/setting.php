@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<a href="/bbs.php">掲示板に戻る</a>
+<a href="/timeline.php">タイムラインに戻る</a>
 <h1>アイコン画像およびカバー画像設定/変更</h1>
 <dl>
   <dt>ID</dt>
