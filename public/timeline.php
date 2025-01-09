@@ -44,32 +44,6 @@ if (isset($_POST['body']) && !empty($_SESSION['login_user_id'])) {
   header("Location: ./timeline.php");
   return;
 }
-
-// 投稿データを取得。
-// フォローしている人の投稿と自分自身の投稿のみ表示
-$sql = 'SELECT bbs_entries.*, users.name AS user_name, users.icon_filename AS user_icon_filename'
-  . ' FROM bbs_entries'
-  . ' INNER JOIN users ON bbs_entries.user_id = users.id'
-  . ' LEFT OUTER JOIN user_relationships ON bbs_entries.user_id = user_relationships.followee_user_id'
-  . ' WHERE user_relationships.follower_user_id = :login_user_id OR bbs_entries.user_id = :login_user_id'
-  . ' ORDER BY bbs_entries.created_at DESC';
-$select_sth = $dbh->prepare($sql);
-$select_sth->execute([
-  ':login_user_id' => $_SESSION['login_user_id'],
-]);
-
-// bodyのHTMLを出力するための関数を用意する
-function bodyFilter (string $body): string
-{
-  $body = htmlspecialchars($body); // エスケープ処理
-  $body = nl2br($body); // 改行文字を<br>要素に変換
-
-  // >>1 といった文字列を該当番号の投稿へのページ内リンクとする (レスアンカー機能)
-  // 「>」(半角の大なり記号)は htmlspecialchars() でエスケープされているため注意
-  $body = preg_replace('/&gt;&gt;(\d+)/', '<a href="#entry$1">&gt;&gt;$1</a>', $body);
-
-  return $body;
-}
 ?>
 
 <div>
@@ -80,6 +54,7 @@ function bodyFilter (string $body): string
   /
   <a href="/users.php">会員一覧画面</a>
 </div>
+
 <!-- フォームのPOST先はこのファイル自身にする -->
 <form method="POST" action="./timeline.php"><!-- enctypeは外しておきましょう -->
   <textarea name="body" required></textarea>
@@ -90,90 +65,72 @@ function bodyFilter (string $body): string
   <canvas id="imageCanvas" style="display: none;"></canvas><!-- 画像縮小に使うcanvas (非表示) -->
   <button type="submit">送信</button>
 </form>
-
-<?php foreach($select_sth as $entry): ?>
-  <dl style="margin-bottom: 1em; padding-bottom: 1em; border-bottom: 1px solid #ccc;">
-    <dt id="entry<?= htmlspecialchars($entry['id']) ?>">
-      番号
-    </dt>
-    <dd>
-      <?= htmlspecialchars($entry['id']) ?>
-    </dd>
-    <dt>
-      投稿者
-    </dt>
-    <dd>
-      <a href="/profile.php?user_id=<?= $entry['user_id'] ?>">
-        <?php if(!empty($entry['user_icon_filename'])): // アイコン画像がある場合は表示 ?>
-        <img src="/image/<?= $entry['user_icon_filename'] ?>"
-          style="height: 2em; width: 2em; border-radius: 50%; object-fit: cover;">
-        <?php endif; ?>
-
-        <?= htmlspecialchars($entry['user_name']) ?>
-        (ID: <?= htmlspecialchars($entry['user_id']) ?>)
-      </a>
-    </dd>
-    <dt>日時</dt>
-    <dd><?= $entry['created_at'] ?></dd>
-    <dt>内容</dt>
-    <dd>
-      <?= bodyFilter($entry['body']) ?>
-      <?php if(!empty($entry['image_filename'])): ?>
-      <div>
-        <img src="/image/<?= $entry['image_filename'] ?>" style="max-height: 10em;">
-      </div>
-      <?php endif; ?>
-    </dd>
-  </dl>
-<?php endforeach ?>
+<hr>
+<dl id="entryTemplate" style="display: none; margin-bottom: 1em; padding-bottom: 1em; border-bottom: 1px solid #ccc;">
+  <dt>番号</dt>
+  <dd data-role="entryIdArea"></dd>
+  <dt>投稿者</dt>
+  <dd>
+    <a href="" data-role="entryUserAnchor"></a>
+  </dd>
+  <dt>日時</dt>
+  <dd data-role="entryCreatedAtArea"></dd>
+  <dt>内容</dt>
+  <dd data-role="entryBodyArea">
+  </dd>
+</dl>
+<div id="entriesRenderArea"></div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  const imageInput = document.getElementById("imageInput");
-  imageInput.addEventListener("change", () => {
-    if (imageInput.files.length < 1) {
-      // 未選択の場合
-      return;
-    }
+  const entryTemplate = document.getElementById('entryTemplate');
+  const entriesRenderArea = document.getElementById('entriesRenderArea');
+  const request = new XMLHttpRequest();
+  
+  request.onload = (event) => {
+    const response = event.target.response;
+    response.entries.forEach((entry) => {
+      // テンプレートとするものから要素をコピー
+      const entryCopied = entryTemplate.cloneNode(true);
+      // display: none を display: block に書き換える
+      entryCopied.style.display = 'block';
+      // 番号(ID)を表示
+      entryCopied.querySelector('[data-role="entryIdArea"]').innerText = entry.id.toString();
+      // 名前を表示
+      entryCopied.querySelector('[data-role="entryUserAnchor"]').innerText = entry.user_name;
+      // 名前のところのリンク先(プロフィール)のURLを設定
+      entryCopied.querySelector('[data-role="entryUserAnchor"]').href = entry.user_profile_url;
+      // 投稿日時を表示
+      entryCopied.querySelector('[data-role="entryCreatedAtArea"]').innerText = entry.created_at;
+      // 本文を表示 (ここはHTMLなのでinnerHTMLで)
+      entryCopied.querySelector('[data-role="entryBodyArea"]').innerHTML = entry.body;
 
-    const file = imageInput.files[0];
-    if (!file.type.startsWith('image/')){ // 画像でなければスキップ
-      return;
-    }
+      // ユーザーアイコン表示
+      if (entry.user_icon_url) {
+        const img = document.createElement('img');
+        img.src = entry.user_icon_url;
+        img.style.width = '40px';  // アイコンのサイズを調整
+        img.style.height = '40px'; // アイコンのサイズを調整
+        img.style.borderRadius = '50%'; // 丸型にする
+        img.style.marginRight = '10px'; // 名前との間隔調整
+        entryCopied.querySelector('[data-role="entryUserAnchor"]').prepend(img); // ユーザー名の前にアイコンを追加
+      }
+      
+      // 画像表示
+      if (entry.image_url) {
+        const img = document.createElement('img');
+        img.src = entry.image_url;
+        img.style.maxHeight = '10em';
+        entryCopied.querySelector('[data-role="entryBodyArea"]').appendChild(img);
+      }
 
-    // 画像縮小処理
-    const imageBase64Input = document.getElementById("imageBase64Input"); // base64を送るようのinput
-    const canvas = document.getElementById("imageCanvas"); // 描画するcanvas
-    const reader = new FileReader();
-    const image = new Image();
-    reader.onload = () => { // ファイルの読み込み完了したら動く処理を指定
-      image.onload = () => { // 画像として読み込み完了したら動く処理を指定
-
-        // 元の縦横比を保ったまま縮小するサイズを決めてcanvasの縦横に指定する
-        const originalWidth = image.naturalWidth; // 元画像の横幅
-        const originalHeight = image.naturalHeight; // 元画像の高さ
-        const maxLength = 1000; // 横幅も高さも1000以下に縮小するものとする
-        if (originalWidth <= maxLength && originalHeight <= maxLength) { // どちらもmaxLength以下の場合そのまま
-            canvas.width = originalWidth;
-            canvas.height = originalHeight;
-        } else if (originalWidth > originalHeight) { // 横長画像の場合
-            canvas.width = maxLength;
-            canvas.height = maxLength * originalHeight / originalWidth;
-        } else { // 縦長画像の場合
-            canvas.width = maxLength * originalWidth / originalHeight;
-            canvas.height = maxLength;
-        }
-
-        // canvasに実際に画像を描画 (canvasはdisplay:noneで隠れているためわかりにくいが...)
-        const context = canvas.getContext("2d");
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-        // canvasの内容をbase64に変換しinputのvalueに設定
-        imageBase64Input.value = canvas.toDataURL();
-      };
-      image.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
+      // 最後に実際の描画を行う
+      entriesRenderArea.appendChild(entryCopied);
+    });
+  }
+  
+  request.open('GET', '/timeline_json.php', true); // timeline_json.php を叩く
+  request.responseType = 'json';
+  request.send();
 });
 </script>
