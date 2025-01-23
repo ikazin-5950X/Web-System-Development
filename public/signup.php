@@ -32,7 +32,10 @@ if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password
 ?>
 <h1>会員登録</h1>
 
+<p>
 会員登録済の人は<a href="/login.php">ログイン</a>しましょう。
+</p>
+
 <hr>
 
 <!-- 登録フォーム -->
@@ -61,3 +64,70 @@ if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password
   入力されたメールアドレスは既に使われています。
 </div>
 <?php endif; ?>
+
+<style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 15px;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      width: 100%;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 2em;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      font-size: 1.5em;
+      margin-bottom: 1em;
+      text-align: center;
+    }
+    label {
+      font-size: 1.1em;
+      display: block;
+      margin: 0.5em 0;
+    }
+    input {
+      width: calc(100% - 20px);
+      padding: 0.8em;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 1em;
+    }
+    button {
+      width: 100%;
+      padding: 0.8em;
+      font-size: 1.2em;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    a {
+      font-size: 1em;
+      color: #007bff;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+      margin: 1em 0;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .error {
+      color: red;
+      text-align: center;
+      margin-top: 1em;
+    }
+ p {
+  text-align: center;
+ }

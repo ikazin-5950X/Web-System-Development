@@ -25,6 +25,7 @@ $select_sth->execute([
 ?>
 
 <h1>フォロワー一覧</h1>
+<a href="/timeline.php">タイムラインに戻る</a>
 
 <ul>
   <?php foreach($select_sth as $relationship): ?>

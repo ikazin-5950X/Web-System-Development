@@ -73,3 +73,57 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') { // フォームでPOSTした場合�
   </form>
 </div>
 <?php endif; ?>
+
+<style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 15px;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      width: 100%;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 2em;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.5em;
+      margin-bottom: 1em;
+    }
+    p {
+      font-size: 1.2em;
+      margin-bottom: 1.5em;
+    }
+    button {
+      width: 100%;
+      padding: 0.8em;
+      font-size: 1.2em;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    a {
+      font-size: 1em;
+      color: #007bff;
+      text-decoration: none;
+      margin-top: 1em;
+      display: inline-block;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .message {
+      font-size: 1.2em;
+      margin-bottom: 1.5em;
+    }
+</style>

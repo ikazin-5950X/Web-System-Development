@@ -149,3 +149,71 @@ document.addEventListener("DOMContentLoaded", () => {
   setupImageInput("coverImageInput", "coverImageBase64Input");
 });
 </script>
+
+
+<style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 15px;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 700px;
+      margin: 50px auto;
+      padding: 2em;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    dl {
+      margin-bottom: 1em;
+    }
+    dt {
+      font-weight: bold;
+    }
+    dd {
+      margin-left: 1em;
+      margin-bottom: 0.5em;
+    }
+    img {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    form div {
+      margin-bottom: 1em;
+    }
+    textarea, input[type="file"], input[type="date"] {
+      width: 100%;
+      padding: 0.5em;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 0.8em;
+      font-size: 1.2em;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    a {
+      display: inline-block;
+      margin: 1em 0;
+      color: #007bff;
+      text-decoration: none;
+      text-align: center;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>

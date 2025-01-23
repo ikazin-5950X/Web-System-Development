@@ -36,8 +36,6 @@ if (!empty($_POST['email']) && !empty($_POST['password'])) {
 }
 ?>
 
-初めての人は<a href="/signup.php">会員登録</a>しましょう。
-<hr>
 <h1>ログイン</h1>
 <!-- ログインフォーム -->
 <form method="POST">
@@ -55,7 +53,80 @@ if (!empty($_POST['email']) && !empty($_POST['password'])) {
   <button type="submit">決定</button>
 </form>
 <?php if(!empty($_GET['error'])): // エラー用のクエリパラメータがある場合はエラーメッセージ表示 ?>
-<div style="color: red;">
+<div class="error">
   メールアドレスかパスワードが間違っています。
 </div>
 <?php endif; ?>
+<hr>
+<div class="signup" >初めての人は<a href="/signup.php">会員登録</a>しましょう。</div>
+
+
+<style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 15px;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      width: 100%;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 2em;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      font-size: 1.5em;
+      margin-bottom: 1em;
+      text-align: center;
+    }
+    label {
+      font-size: 1.1em;
+      display: block;
+      margin: 0.5em 0;
+    }
+    input {
+      width: calc(100% - 20px);
+      padding: 0.8em;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 1em;
+    }
+    button {
+      width: 100%;
+      padding: 0.8em;
+      font-size: 1.2em;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    a {
+      font-size: 1em;
+      color: #007bff;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+      margin: 1em 0;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .error {
+      color: red;
+      text-align: center;
+      margin-top: 1em;
+    }
+
+    .signup {
+      text-align: center;
+    }
+  </style>
+</head>
